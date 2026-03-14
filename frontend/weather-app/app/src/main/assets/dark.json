@@ -1,0 +1,17 @@
+{
+  "version": 8,
+  "name": "Weather Dark",
+  "background": {
+    "color": "#0a0a0f"
+  },
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#0a0a0f"
+      }
+    }
+  ]
+}
