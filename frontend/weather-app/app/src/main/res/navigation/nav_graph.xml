@@ -3,30 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
-
+    app:startDestination="@id/mapFragment">
     <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.swirlingskies.weatherapp.fragments.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
-
-        <action
-            android:id="@+id/action_FirstFragment_to_RadarMapFragment"
-            app:destination="@id/radarMapFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/SecondFragment"
-        android:name="com.swirlingskies.weatherapp.fragments.SecondFragment"
-        android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
-
-        <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/radarMapFragment"
-        android:name="com.swirlingskies.weatherapp.fragments.RadarMapFragment"
-        android:label="RadarMapFragment" />
+        android:id="@+id/mapFragment"
+        android:name="com.swirlingskies.weatherapp.fragments.MapFragment"
+        android:label="fragment_map"
+        tools:layout="@layout/fragment_map" />
 </navigation>

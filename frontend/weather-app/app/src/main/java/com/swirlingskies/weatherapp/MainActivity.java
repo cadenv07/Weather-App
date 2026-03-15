@@ -8,6 +8,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.view.View;
 
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -17,6 +20,7 @@ import com.swirlingskies.weatherapp.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.WindowInsets;
 
 import org.maplibre.android.MapLibre;
 import org.maplibre.android.WellKnownTileServer;
@@ -30,25 +34,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getWindow().setDecorFitsSystemWindows(false);
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        getWindow().getInsetsController().hide(WindowInsets.Type.statusBars());
+        controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+
         MapLibre.getInstance(this, "", WellKnownTileServer.MapLibre);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        setSupportActionBar(binding.toolbar);
+        //setSupportActionBar(binding.toolbar);
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
-            }
-        });
+        //NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
     }
 
     @Override
