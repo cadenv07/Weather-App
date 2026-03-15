@@ -3,7 +3,14 @@ package com.swirlingskies.weatherapp.fragments;
 import static androidx.core.content.ContentProviderCompat.requireContext;
 
 import static org.maplibre.android.style.expressions.Expression.get;
+import static org.maplibre.android.style.expressions.Expression.literal;
+import static org.maplibre.android.style.expressions.Expression.match;
+import static org.maplibre.android.style.expressions.Expression.stop;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +32,7 @@ import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.maps.MapLibreMapOptions;
 import org.maplibre.android.maps.MapView;
 import org.maplibre.android.maps.Style;
+import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.FillLayer;
 import org.maplibre.android.style.layers.LineLayer;
 import org.maplibre.android.style.layers.PropertyFactory;
@@ -75,6 +83,10 @@ public class MapFragment extends Fragment {
     }
 
     private void addAwipsLayers(Style style) {
+        style.addImage("hatch-1", createHatchBitmap(1));
+        style.addImage("hatch-2", createHatchBitmap(2));
+        style.addImage("hatch-3", createHatchBitmap(3));
+
         style.addSource(new GeoJsonSource("counties-src", URI.create("asset://counties.geojson")));
         LineLayer countiesLayer = new LineLayer("counties-layer", "counties-src");
         countiesLayer.setMinZoom(5f);
@@ -95,10 +107,17 @@ public class MapFragment extends Fragment {
         style.addLayer(worldLayer);
 
         RequestQueue queue = Volley.newRequestQueue(requireContext());
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, "http://awips-server:8080/spc/9",
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, "http://awips-server:8080/spc/11",
                 response -> {
                     style.addSource(new GeoJsonSource("spc-outlook-source", response));
                     FillLayer spcFill = new FillLayer("spc-outlook-fill", "spc-outlook-source");
+                    spcFill.setFilter(
+                            Expression.all(
+                                    Expression.not(Expression.eq(get("label"), literal("CIG1"))),
+                                    Expression.not(Expression.eq(get("label"), literal("CIG2"))),
+                                    Expression.not(Expression.eq(get("label"), literal("CIG3")))
+                            )
+                    );
                     spcFill.setProperties(
                             PropertyFactory.fillColor(get("fill")),
                             PropertyFactory.fillOpacity(0.4f)
@@ -110,6 +129,24 @@ public class MapFragment extends Fragment {
                             PropertyFactory.lineWidth(1.5f)
                     );
                     style.addLayer(spcLine);
+                    FillLayer spcHatch = new FillLayer("spc-wind-hatch", "spc-outlook-source");
+                    spcHatch.setFilter(
+                            Expression.any(
+                                    Expression.eq(get("label"), literal("CIG1")),
+                                    Expression.eq(get("label"), literal("CIG2")),
+                                    Expression.eq(get("label"), literal("CIG3"))
+                            )
+                    );
+                    spcHatch.setProperties(
+                            PropertyFactory.fillPattern(
+                                    match(get("label"), literal("hatch-1"),
+                                            stop("CIG1", "hatch-1"),
+                                            stop("CIG2", "hatch-2"),
+                                            stop("CIG3", "hatch-3")
+                                    )
+                            )
+                    );
+                    style.addLayer(spcHatch);
                 },
                 error -> Log.e("Volley", "Error: " + error.toString())
         );
@@ -135,5 +172,29 @@ public class MapFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
+    }
+
+    private Bitmap createHatchBitmap(int density) {
+        int size = 20;
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setStrokeWidth(2.f);
+        paint.setAntiAlias(true);
+
+        switch (density) {
+            case 1: // sparse single diagonal - one line per tile, bottom-left to top-right
+                canvas.drawLine(0, size/2.f, size/2.f, 0, paint);
+                break;
+            case 2: // top-left to bottom-right diagonal
+                canvas.drawLine(-1, -1, size+1, size+1, paint);
+                break;
+            case 3: // crosshatch
+                canvas.drawLine(0, size, size, 0, paint);
+                canvas.drawLine(0, 0, size, size, paint);
+                break;
+        }
+        return bitmap;
     }
 }
